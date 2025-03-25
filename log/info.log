@@ -1,0 +1,28 @@
+{"level":"info","message":"Log yaratildi","timestamp":"2025-03-24T06:29:31.081Z"}
+{"level":"error","message":"relation \"lanuages\" does not exist","timestamp":"2025-03-24T06:32:58.311Z"}
+{"level":"error","message":"null value in column \"name\" of relation \"languages\" violates not-null constraint","timestamp":"2025-03-24T09:26:42.694Z"}
+{"level":"info","message":"Log yaratildi","timestamp":"2025-03-24T09:27:07.617Z"}
+{"level":"error","message":"relation \"reports\" does not exist","timestamp":"2025-03-24T09:31:08.030Z"}
+{"level":"error","message":"relation \"reports\" does not exist","timestamp":"2025-03-24T09:33:01.508Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:33:20.037Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:35:07.838Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:37:39.614Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:37:40.380Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:37:41.045Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:38:32.905Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:38:34.086Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:40:26.772Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:40:27.674Z"}
+{"level":"error","message":"\"t\" is not a valid binary digit","timestamp":"2025-03-24T09:40:33.247Z"}
+{"level":"error","message":"\"t\" is not a valid binary digit","timestamp":"2025-03-24T09:40:34.026Z"}
+{"level":"error","message":"\"t\" is not a valid binary digit","timestamp":"2025-03-24T09:40:34.770Z"}
+{"level":"error","message":"\"t\" is not a valid binary digit","timestamp":"2025-03-24T09:42:16.987Z"}
+{"level":"error","message":"\"t\" is not a valid binary digit","timestamp":"2025-03-24T09:42:17.836Z"}
+{"level":"error","message":"\"t\" is not a valid binary digit","timestamp":"2025-03-24T09:42:18.311Z"}
+{"level":"error","message":"\"s\" is not a valid binary digit","timestamp":"2025-03-24T09:42:21.130Z"}
+{"level":"info","message":"Log yaratildi","timestamp":"2025-03-24T09:42:25.113Z"}
+{"level":"error","message":"null value in column \"name\" of relation \"languages\" violates not-null constraint","timestamp":"2025-03-24T09:46:19.572Z"}
+{"level":"error","message":"\"s\" is not a valid binary digit","timestamp":"2025-03-24T09:46:26.804Z"}
+{"level":"error","message":"\"a\" is not a valid binary digit","timestamp":"2025-03-24T09:46:38.687Z"}
+{"level":"info","message":"Log yaratildi","timestamp":"2025-03-24T09:49:08.317Z"}
+{"level":"error","message":"null value in column \"name\" of relation \"languages\" violates not-null constraint","timestamp":"2025-03-24T09:53:37.905Z"}
