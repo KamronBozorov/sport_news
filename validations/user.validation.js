@@ -12,6 +12,7 @@ module.exports = adminValidation = (data) => {
     bookmarks: Joi.string().optional(),
     interests: Joi.string().optional(),
     otp: Joi.string().optional(),
+    phone_numer: Joi.string().required(),
   });
   return schema.validate(data);
 };

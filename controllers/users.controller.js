@@ -1,10 +1,12 @@
+const otpGenerator = require("otp-generator");
+const config = require("config");
 const pool = require("../config/db");
 const errorHandler = require("../helpers/error-handler");
-const joi = require("joi");
 const userValidation = require("../validations/user.validation");
 const bcrypt = require("bcrypt");
 const uuid = require("uuid");
 const emaiService = require("../services/emai.service");
+const jwtService = require("../services/jwt.service");
 
 const newData = async (req, res) => {
   try {
@@ -18,13 +20,19 @@ const newData = async (req, res) => {
       is_active,
       bookmarks,
       interests,
+      phone_number,
     } = value;
-    const random = uuid.v4();
-    const otp = `http://localhost:3000/api/users/activate/${random}`;
+
+    const otp = otpGenerator.generate(4, {
+      digits: true,
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+    });
     await emaiService.sendEmail(email, otp);
     const hashed_password = await bcrypt.hash(password, 10);
     await pool.query(
-      `INSERT INTO users (first_name, last_name, email, password, role, is_active, bookmarks, interests, otp) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      `INSERT INTO users (first_name, last_name, email, password, role, is_active, bookmarks, interests, phone_number, otp) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
 
       [
         first_name,
@@ -35,7 +43,8 @@ const newData = async (req, res) => {
         is_active,
         bookmarks,
         interests,
-        random,
+        phone_number,
+        otp,
       ],
     );
 
@@ -61,8 +70,212 @@ const activateUser = async (req, res) => {
       "",
       link,
     ]);
+    const payload = {
+      sub: user.rows[0].id,
+      role: user.rows[0].role,
+      is_active: user.rows[0].is_active,
+    };
+
+    const tokens = jwtService.generateTokens(payload);
+
+    await pool.query("UPDATE users SET refresh_token=$1", [
+      tokens.refreshToken,
+    ]);
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxage: config.get("CookieTime"),
+      httponly: true,
+    });
+
+    res.cookie("accessToken", tokens.refreshToken, {
+      maxage: config.get("CookieTime"),
+      httponly: true,
+      secure: process.env.node_env === "production",
+      samesite: "strict",
+    });
 
     res.status(200).send({ message: "Akkaunt faollashdi" });
+  } catch (error) {
+    errorHandler(error, res);
+  }
+};
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    console.log(email, password);
+    if (!email || !password)
+      return res
+        .status(400)
+        .send({ message: "iltimos, email va parolni to'gri kiriting!" });
+
+    const userdata = await pool.query(`select * from users where email=$1`, [
+      email,
+    ]);
+    console.log(userdata.rows[0]);
+    if (!userdata)
+      return res
+        .status(401)
+        .send({ message: "iltimos, email va parolni to'gri kiriting!" });
+
+    const isvalidpassword = await bcrypt.compare(
+      password,
+      userdata.rows[0].password,
+    );
+
+    if (!isvalidpassword)
+      return res
+        .status(401)
+        .send({ message: "iltimos, email va parolni to'g'ri kiriting!" });
+
+    const payload = {
+      sub: userdata.rows[0].id,
+      role: userdata.rows[0].role,
+      is_active: userdata.rows[0].is_active,
+    };
+
+    const tokens = jwtService.generateTokens(payload);
+
+    await pool.query("UPDATE users SET refresh_token=$1", [
+      tokens.refreshToken,
+    ]);
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxage: config.get("CookieTime"),
+      httponly: true,
+    });
+
+    res.cookie("accessToken", tokens.refreshToken, {
+      maxage: config.get("CookieTime"),
+      httponly: true,
+      secure: process.env.node_env === "production",
+      samesite: "strict",
+    });
+
+    res.status(200).send({
+      message: "muvaffaqiyatli kirish!",
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
+  } catch (error) {
+    errorHandler(error, res);
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const cookie = req.headers.cookie;
+
+    if (!cookie)
+      return res
+        .status(401)
+        .send({ message: "Autentifikatsiya talab qilinadi!" });
+
+    let token = {};
+    cookie.split("; ").forEach((cook) => {
+      const key = cook.split("=")[0];
+      token[key] = cook.split("=")[1];
+    });
+
+    const refreshToken = token.refreshToken;
+    const accessToken = token.accessToken;
+
+    if (!refreshToken)
+      return res
+        .status(401)
+        .send({ message: "Autentifikatsiya talab qilinadi!" });
+
+    const userData = await pool.query(
+      `SELECT * FROM users WHERE refresh_token=$1`,
+      [refreshToken],
+    );
+
+    if (!userData)
+      return res.status(401).send({ message: "Foydalanuvchi topilmadi" });
+
+    userData.rows[0].refresh_token = "";
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return res.status(200).send({
+      message: "Muvaffaqiyatli chiqish qilindi!",
+    });
+  } catch (error) {
+    errorHandler(error, res);
+  }
+};
+
+const refreshToken = async (req, res) => {
+  try {
+    const cookie = req.headers.cookie;
+
+    if (!cookie)
+      return res
+        .status(401)
+        .send({ message: "Autentifikatsiya talab qilinadi!" });
+
+    let token = {};
+    cookie.split("; ").forEach((cook) => {
+      const key = cook.split("=")[0];
+      token[key] = cook.split("=")[1];
+    });
+
+    const refreshToken = token.refreshToken;
+    const accessToken = token.accessToken;
+
+    if (!refreshToken)
+      return res
+        .status(401)
+        .send({ message: "Autentifikatsiya talab qilinadi!" });
+
+    const userData = await pool.query(
+      `SELECT * FROM users WHERE refresh_token=$1`,
+      [refreshToken],
+    );
+
+    if (!userData)
+      return res.status(401).send({ message: "Foydalanuvchi topilmadi" });
+
+    const payload = {
+      sub: userData.rows[0].id,
+      role: userData.rows[0].role,
+      is_active: userData.rows[0].is_active,
+    };
+
+    const tokens = jwtService.generateTokens(payload);
+
+    await pool.query("UPDATE users SET refresh_token=$1", [
+      tokens.refreshToken,
+    ]);
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxage: config.get("CookieTime"),
+      httponly: true,
+    });
+
+    res.cookie("accessToken", tokens.refreshToken, {
+      maxage: config.get("CookieTime"),
+      httponly: true,
+      secure: process.env.node_env === "production",
+      samesite: "strict",
+    });
+
+    res.status(200).send({
+      message: "Tokenlar yangilandi",
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
   } catch (error) {
     errorHandler(error, res);
   }
@@ -105,6 +318,7 @@ const updateData = async (req, res) => {
       is_active,
       bookmarks,
       interests,
+      phone_number,
     } = req.body;
 
     const user = await pool.query(
@@ -118,6 +332,7 @@ const updateData = async (req, res) => {
         is_active,
         bookmarks,
         interests,
+        phone_number,
         id,
       ],
     );
@@ -160,5 +375,8 @@ module.exports = {
   getDataByid,
   updateData,
   deleteData,
+  login,
+  logout,
   activateUser,
+  refreshToken,
 };

@@ -19,12 +19,12 @@ class EmailService {
     await this.transporter.sendMail({
       from: config.get("smtp_user"),
       to: toEmail,
-      subject: "Lugatim akkauntini faollashtirish",
+      subject: "SportUZ akkauntini faollashtirish",
       text: "",
       html: `
       <div> 
-        <h1> Lugatim akkauntini faollashtirish uchun quyidagi linkka bosing </h1> 
-        <a href="${otp}">Faollashtirish </a>
+        <h2> Lugatim akkauntini faollashtirish uchun otp kod: </h1> 
+        <h1>${otp}</h1>
       </div>
       `,
     });
